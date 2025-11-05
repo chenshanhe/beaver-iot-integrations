@@ -1,0 +1,38 @@
+# Tuwaiq Project Customization Configuration
+# Thing spec filter for performance optimization
+
+#msc:
+#  thing-spec-filter:
+#    models:
+# EM500-SMTC device filter (example using YAML configuration)
+# Note: This is disabled by default as we use code-based filter (EM500SMTCDeviceFilter.java)
+# You can enable this by uncommenting and adjusting the configuration below
+
+# em500-smtc-config:
+#   model-pattern: "EM500-SMTC*"
+#   mode: WHITELIST
+#   priority: 50  # Lower than code-based filter (100)
+#   property-ids:
+#     # Basic information
+#     - device_status
+#     - ipso_version
+#     - sn
+#     - hardware_version
+#     - firmware_version
+#     - lorawan_class
+#     - battery
+#     # ... (add more as needed)
+#   service-ids:
+#     - clear_historical_data
+#     - reboot
+#     # ... (add more as needed)
+
+# Example: Another device model using BLACKLIST mode
+# another-device:
+#   model-pattern: "ANOTHER-MODEL*"
+#   mode: BLACKLIST
+#   priority: 0
+#   property-ids:
+#     # Properties to exclude
+#     - debug_info
+#     - internal_state

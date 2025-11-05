@@ -43,11 +43,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.milesight.beaveriot</groupId>
             <artifactId>context</artifactId>
             <scope>provided</scope>

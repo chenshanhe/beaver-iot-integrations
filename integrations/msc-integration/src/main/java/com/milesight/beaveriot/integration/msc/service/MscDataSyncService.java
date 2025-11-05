@@ -359,7 +359,7 @@ public class MscDataSyncService {
         val details = getDeviceDetails(task);
         val deviceId = details.getDeviceId();
         val thingSpec = mscDeviceService.getThingSpec(String.valueOf(deviceId));
-        val device = mscDeviceService.updateLocalDevice(task.identifier, String.valueOf(deviceId), thingSpec);
+        val device = mscDeviceService.updateLocalDevice(task.identifier, String.valueOf(deviceId), thingSpec, details);
         updateDeviceStatus(device, details.getConnectStatus());
         return device;
     }
@@ -378,7 +378,7 @@ public class MscDataSyncService {
         val details = getDeviceDetails(task);
         val deviceId = details.getDeviceId();
         val thingSpec = mscDeviceService.getThingSpec(String.valueOf(deviceId));
-        val device = mscDeviceService.addLocalDevice(task.identifier, details.getName(), String.valueOf(deviceId), thingSpec);
+        val device = mscDeviceService.addLocalDevice(task.identifier, details.getName(), String.valueOf(deviceId), thingSpec, details);
         updateDeviceStatus(device, details.getConnectStatus());
         return device;
     }

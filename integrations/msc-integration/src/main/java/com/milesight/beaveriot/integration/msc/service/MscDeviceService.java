@@ -19,7 +19,9 @@ import com.milesight.beaveriot.eventbus.api.Event;
 import com.milesight.beaveriot.integration.msc.constant.MscErrorCode;
 import com.milesight.beaveriot.integration.msc.constant.MscIntegrationConstants;
 import com.milesight.beaveriot.integration.msc.entity.MscServiceEntities;
+import com.milesight.beaveriot.integration.msc.filter.ThingSpecFilterService;
 import com.milesight.beaveriot.integration.msc.util.MscTslUtils;
+import com.milesight.cloud.sdk.client.model.DeviceDetailResponse;
 import com.milesight.cloud.sdk.client.model.DeviceInfoResponse;
 import com.milesight.cloud.sdk.client.model.DeviceSaveOrUpdateRequest;
 import com.milesight.cloud.sdk.client.model.GenericResponseBodyDeviceInfoResponse;
@@ -57,6 +59,9 @@ public class MscDeviceService {
 
     @Autowired
     private DeviceServiceProvider deviceServiceProvider;
+
+    @Autowired
+    private ThingSpecFilterService thingSpecFilterService;
 
     @SneakyThrows
     @EventSubscribe(payloadKeyExpression = "msc-integration.device.*", eventType = {
@@ -160,17 +165,29 @@ public class MscDeviceService {
             final String deviceIdStr = String.valueOf(deviceId);
             val thingSpec = getThingSpec(deviceIdStr);
 
-            addLocalDevice(identifier, deviceName, deviceIdStr, thingSpec);
+            // Get device details for filtering
+            val deviceDetail = mscClient.device()
+                    .getDetails(deviceIdStr)
+                    .execute()
+                    .body()
+                    .getData();
+
+            addLocalDevice(identifier, deviceName, deviceIdStr, thingSpec, deviceDetail);
         } catch (MscSdkException e) {
             log.warn("Add device failed: '{}' '{}'", deviceName, identifier);
             throw MscErrorCode.wrap(e).build();
         }
     }
 
-    public Device addLocalDevice(String identifier, String deviceName, String deviceId, ThingSpec thingSpec) {
+    public Device addLocalDevice(String identifier, String deviceName, String deviceId, ThingSpec thingSpec, DeviceDetailResponse deviceDetail) {
         val integrationId = MscIntegrationConstants.INTEGRATION_IDENTIFIER;
         val deviceKey = IntegrationConstants.formatIntegrationDeviceKey(integrationId, identifier);
-        val entities = MscTslUtils.thingSpecificationToEntities(integrationId, deviceKey, thingSpec);
+
+        // Apply filter based on device model
+        val deviceModel = Optional.ofNullable(deviceDetail).map(DeviceDetailResponse::getModel).orElse(null);
+        val filteredThingSpec = thingSpecFilterService.filter(thingSpec, deviceModel);
+
+        val entities = MscTslUtils.thingSpecificationToEntities(integrationId, deviceKey, filteredThingSpec);
         addAdditionalEntities(integrationId, deviceKey, entities);
 
         val device = new DeviceBuilder(integrationId)
@@ -183,10 +200,15 @@ public class MscDeviceService {
         return device;
     }
 
-    public Device updateLocalDevice(String identifier, String deviceId, ThingSpec thingSpec) {
+    public Device updateLocalDevice(String identifier, String deviceId, ThingSpec thingSpec, DeviceDetailResponse deviceDetail) {
         val integrationId = MscIntegrationConstants.INTEGRATION_IDENTIFIER;
         val deviceKey = IntegrationConstants.formatIntegrationDeviceKey(integrationId, identifier);
-        val entities = MscTslUtils.thingSpecificationToEntities(integrationId, deviceKey, thingSpec);
+
+        // Apply filter based on device model
+        val deviceModel = Optional.ofNullable(deviceDetail).map(DeviceDetailResponse::getModel).orElse(null);
+        val filteredThingSpec = thingSpecFilterService.filter(thingSpec, deviceModel);
+
+        val entities = MscTslUtils.thingSpecificationToEntities(integrationId, deviceKey, filteredThingSpec);
         addAdditionalEntities(integrationId, deviceKey, entities);
 
         val device = deviceServiceProvider.findByIdentifier(identifier, integrationId);
