@@ -18,6 +18,7 @@ import com.milesight.beaveriot.eventbus.annotations.EventSubscribe;
 import com.milesight.beaveriot.eventbus.api.Event;
 import com.milesight.beaveriot.integration.msc.constant.MscErrorCode;
 import com.milesight.beaveriot.integration.msc.constant.MscIntegrationConstants;
+import com.milesight.beaveriot.integration.msc.enhancer.EM500SMTCEntityEnhancer;
 import com.milesight.beaveriot.integration.msc.entity.MscServiceEntities;
 import com.milesight.beaveriot.integration.msc.filter.ThingSpecFilterService;
 import com.milesight.beaveriot.integration.msc.util.MscTslUtils;
@@ -190,6 +191,9 @@ public class MscDeviceService {
         val entities = MscTslUtils.thingSpecificationToEntities(integrationId, deviceKey, filteredThingSpec);
         addAdditionalEntities(integrationId, deviceKey, entities);
 
+        // Enhance entities for specific device models
+        EM500SMTCEntityEnhancer.enhance(entities, deviceModel);
+
         val device = new DeviceBuilder(integrationId)
                 .name(deviceName)
                 .identifier(identifier)
@@ -210,6 +214,9 @@ public class MscDeviceService {
 
         val entities = MscTslUtils.thingSpecificationToEntities(integrationId, deviceKey, filteredThingSpec);
         addAdditionalEntities(integrationId, deviceKey, entities);
+
+        // Enhance entities for specific device models
+        EM500SMTCEntityEnhancer.enhance(entities, deviceModel);
 
         val device = deviceServiceProvider.findByIdentifier(identifier, integrationId);
 
